@@ -1,0 +1,7 @@
+Preciso consertar a tabela/logica de variance, atualmente eu tenho a variancia do ULTIMO horario de cada dia, a cada 
+vez que atualiza ele vai atualizando a variancia pra ultima hora que rodou o code, ai tem que ser na verdade
+
+24 horas para 30 dias em 5 variaveis diferentes, ou eu faço 30 tabelas para os 30 dias 
+ou eu faço 5 tabelas de 5 metricas e pra cada metrica 30 dias de coluna e 24 horas de linhas( melhor)
+
+Preciso limpar mais o codigo e começar o readme

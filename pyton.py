@@ -1,10 +1,92 @@
-from tkinter import dialog
 
-import openmeteo_requests
+from datetime import datetime, timedelta ## https://www.geeksforgeeks.org/python/python-datetime-timedelta-function/
+import openmeteo_requests ## https://open-meteo.com/en/docs
+import os
 import csv
 import pandas as pd
 import requests_cache
 from retry_requests import retry
+
+def thirtyDayCount():
+    file_path = os.path.join("30daysReg")
+    for file in os.listdir(file_path):
+        thirtyArr = []
+        fileTarget = os.path.basename(file).split('-')
+        ano, mes, dia = fileTarget[1].split("M")[0], fileTarget[2].split("D")[0], fileTarget[2].split("D")[1]
+        thirtyArr.append((int(ano), int(mes), int(dia), file))
+
+    #no loop because the code will run every day( in thesis )
+    if len(thirtyArr) > 30:
+        menor_data = min(thirtyArr)
+        older = menor_data[3]
+        os.remove(os.path.join(file_path, older))
+
+def prev24count(ano, mes, dia, hora):
+    prev_hours = []
+
+    current = datetime(ano, mes, dia, hora)
+
+    for i in range(1, 25):
+        prev = current - timedelta(hours=i)
+
+        prev_hours.append((
+            prev.year,
+            prev.month,
+            prev.day,
+            prev.hour
+        ))
+
+    return prev_hours
+
+
+
+def hoursVarianceVarReads(ano, mes, dia, hora):
+
+    metrics = [
+        "temperature_2m",
+        "rain",
+        "precipitation_probability",
+        "relative_humidity_2m",
+        "wind_speed_10m"
+    ]
+
+    metric_values = {}
+    for i in metrics:
+        metric_values[i] = []
+
+    hours_list = prev24count(ano, mes, dia, hora)
+
+    for a, m, d, h in hours_list:
+        path = f"30daysReg/A-{a}M-{m}D{d}-H{h}.csv"
+        if os.path.exists(path):
+
+            df = pd.read_csv(path)
+
+            target_time = f"{a}-{m:02d}-{d:02d} {h:02d}:00:00-07:00"
+            match = df.loc[df["date"] == target_time]
+
+            if match.empty:
+                continue
+
+            for metric in metrics:
+
+                value = float(match.iloc[0][metric])
+                metric_values[metric].append(value)
+
+    metric_means = {}
+
+    for metric in metrics:
+        values = metric_values[metric]
+        if values:
+            metric_means[metric] = sum(values) / len(values)
+        else:
+            metric_means[metric] = 0
+
+    return metric_values, metric_means
+
+
+
+
 
 # Setup the Open-Meteo API client with cache and retry on error
 cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
@@ -19,7 +101,7 @@ params = {
 	"longitude": -122.3321,
 	"hourly": ["temperature_2m", "rain", "precipitation_probability", "relative_humidity_2m", "wind_speed_10m"],
 	"models": "gfs_seamless",
-	"current": ["temperature_2m", "relative_humidity_2m", "wind_speed_10m"],
+	"current": ["temperature_2m", "rain", "precipitation_probability", "relative_humidity_2m", "wind_speed_10m"],
 	"timezone": "America/Los_Angeles",
 	"forecast_days": 3,
 }
@@ -35,11 +117,15 @@ print(f"Timezone difference to GMT+0: {response.UtcOffsetSeconds()}s")
 # Process current data. The order of variables needs to be the same as requested.
 current = response.Current()
 current_temperature_2m = current.Variables(0).Value()
-current_relative_humidity_2m = current.Variables(1).Value()
-current_wind_speed_10m = current.Variables(2).Value()
+current_rain = 	current.Variables(1).Value()
+current_precipitation_probability = current.Variables(2).Value()
+current_relative_humidity_2m = current.Variables(3).Value()
+current_wind_speed_10m = current.Variables(4).Value()
 
 print(f"\nCurrent time: {current.Time()}")
 print(f"Current temperature_2m: {current_temperature_2m}")
+print(f"Current rain: {current_rain}")
+print(f"Current precipitation_probability: {current_precipitation_probability}")
 print(f"Current relative_humidity_2m: {current_relative_humidity_2m}")
 print(f"Current wind_speed_10m: {current_wind_speed_10m}")
 
@@ -66,23 +152,34 @@ hourly_data["precipitation_probability"] = hourly_precipitation_probability
 hourly_data["relative_humidity_2m"] = hourly_relative_humidity_2m
 hourly_data["wind_speed_10m"] = hourly_wind_speed_10m
 
+
+
+
 current_time = (
     pd.to_datetime(current.Time(), unit="s", utc=True)
     .tz_convert(response.Timezone().decode())
     .strftime("%Y-%m-%d %H")
 )
 current_time = current_time.rsplit()
-file_path = "variance.csv"
-dia = int(current_time[0][8:10]) - 1
+ano = int(current_time[0][0:4])
+mes = int(current_time[0][5:7])
+dia = int(current_time[0][8:10])
 hora = int(current_time[1])
-der = pd.read_csv(file_path)
-der.loc[dia, f"t_{hora+1}"] = round(float(hourly_temperature_2m[0]), 2)
-der.to_csv(file_path, index=False)
+file_path = os.path.join("30daysVariance", "variance.csv")
+
+OntimeRegister = pd.read_csv(file_path)
+
+varVarianceList = hoursVarianceVarReads(ano, mes, dia, hora)[1]
+for metric, value in varVarianceList.items():
+    OntimeRegister.loc[dia, f"{metric}_variance"] = round(abs(value -  locals()[f"current_{metric}"]),2)
+
+OntimeRegister.to_csv(file_path, index=False)
 
 
-print("linha( dia ): ",current_time[0][8:10], "|| coluna( hora ): " ,current_time[1])
+###################
+hourly_dataframe = pd.DataFrame(hourly_data)
 
-hourly_dataframe = pd.DataFrame(data = hourly_data)
-hourly_dataframe.to_csv('hourly_dataframe.csv', index=False)
-print("\nHourly data\n", hourly_dataframe)
-
+for folder in ["30daysReg"]:
+    thirtyDayCount()
+    os.makedirs(folder, exist_ok=True)
+    hourly_dataframe.to_csv(f"{folder}/A-{ano}M-{mes}D{dia}-H{hora}.csv", index=False)
