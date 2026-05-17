@@ -1,9 +1,0 @@
-.venv/
-.cache.sqlite/
-30daysVariance/
-30daysReg/
-__pycache__/
-.idea/
-.gitignore/
-.gitattributes/
-.git/
