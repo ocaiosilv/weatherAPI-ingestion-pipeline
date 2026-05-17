@@ -1,15 +1,7 @@
-Preciso consertar a tabela/logica de variance, atualmente eu tenho a variancia do ULTIMO horario de cada dia, a cada 
-vez que atualiza ele vai atualizando a variancia pra ultima hora que rodou o code, ai tem que ser na verdade
-
-24 horas para 30 dias em 5 variaveis diferentes, ou eu faço 30 tabelas para os 30 dias 
-ou eu faço 5 tabelas de 5 metricas e pra cada metrica 30 dias de coluna e 24 horas de linhas( melhor)
-
-Preciso limpar mais o codigo e começar o readme
-
-
-
 Tem que adicionar as limitations do projeto, que basicamente é so  relativa a questão da distância do radar e ferramentas
 de checagem, de preferência precisa ser uma medida proxima ao radar para que as medidas que são mesured de hora em hora consigam 
 ter diferença de medida em relação a medição durante o tempo.
 Acho que tem como suprass isso fazendo registro de modelos que a open-meteo possui, então fazendo uma funçaõ usando algo pra checar a
 distancia x  aos n radares de cada modelo para aplicar, mas talvez seja overengieenering
+
+Terminei a logica principal agr é partir para a Nuvem

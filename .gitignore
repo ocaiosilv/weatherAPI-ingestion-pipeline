@@ -4,3 +4,6 @@
 30daysReg/
 __pycache__/
 .idea/
+.gitignore/
+.gitattributes/
+.git/
