@@ -4,8 +4,10 @@ from utils.clean import thirtyDayCount
 from utils.variance import apply_variance
 
 hourly_data, current_values, current_time_dt = fetch_openmeteo()
-hourly_data = apply_variance(hourly_data, current_values, current_time_dt)
+hourly_data = apply_variance(hourly_data, current_time_dt, current_values)
 engine = db_connect()
+
+hourly_data = hourly_data.rename(columns={"date": "forecast_time"})
 
 try:
     thirtyDayCount()
