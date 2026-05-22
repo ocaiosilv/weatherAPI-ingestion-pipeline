@@ -8,7 +8,6 @@ def hoursVarianceVarReads(df, current_time):
         "relative_humidity_2m",
         "wind_speed_10m"
     ]
-
     range24hrs = current_time - datetime.timedelta(hours=24)
 
     # Pega só as linhas onde date == current_time e consult_time nas últimas 24h
