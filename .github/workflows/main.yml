@@ -2,7 +2,7 @@ name: HourRun
 
 on:
   schedule:
-    - cron: '17,29 * * * *'
+    - cron: '17,37 * * * *'
   workflow_dispatch: {}
 
 permissions:
