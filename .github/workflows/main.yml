@@ -1,11 +1,6 @@
 name: HourRun
 
 on:
-  schedule:
-    - cron: '17 * * * *'
-      timezone: 'America/Sao_Paulo'
-    - cron: '37 * * * *'
-      timezone: 'America/Sao_Paulo'
   workflow_dispatch: {}
 
 permissions:
