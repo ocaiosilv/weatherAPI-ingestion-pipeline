@@ -1,10 +1,10 @@
 from api.openmeteo import fetch_openmeteo
-from db.connection import db_connect
+from db.connection import db_connect_retry
 from utils.clean import thirtyDayCount
 from utils.variance import apply_variance
 from sqlalchemy.exc import IntegrityError
 
-engine = db_connect()
+engine = db_connect_retry()
 hourly_data, current_values, current_time_dt = fetch_openmeteo()
 
 hourly_data = apply_variance(hourly_data, current_time_dt, current_values, engine)

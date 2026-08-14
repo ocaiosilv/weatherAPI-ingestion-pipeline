@@ -40,7 +40,7 @@ def db_connect_retry():
             else:
                 raise e
                 
-    raise Exception("Tempo limite estourou.")
+    raise Exception("Timeout")
 
 
 
